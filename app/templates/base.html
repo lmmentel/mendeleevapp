@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv='content-type' content='text/html; charset=utf-8' />
+
+    <meta name="description" content="mendeleev periodic table app">
+    <meta name="author" content="Lukasz Mentel">
+
+    <title>mendeleev</title>
+
+    {{ js_resources|indent(4)|safe }}
+
+    {{ css_resources|indent(4)|safe }}
+
+    {{ plot_script|indent(4)|safe }}
+
+    <link href="{{ url_for('static', filename='css/mendeleev.css') }}" type="text/css" rel="stylesheet" />
+
+  </head>
+  <body class="mv-body">
+
+    {% block content %}
+    {% endblock %}
+
+  </body>
+</html>
