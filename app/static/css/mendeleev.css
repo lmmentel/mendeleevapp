@@ -1,0 +1,25 @@
+/*
+ *
+ * General Theme
+ *
+ */
+    
+.mv-body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.42857143;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+/*  color: #333333;
+  background-color: #ffffff;*/
+  color: #fff;
+  background: #2F2F2F;
+  /*font-family: 'Noto Sans', sans-serif;*/
+  width: 1000px;
+  margin: auto;
+}
+
+.mv-table {
+  width: 800px;
+  margin: auto;
+}
