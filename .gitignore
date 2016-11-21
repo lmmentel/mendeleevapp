@@ -2,3 +2,4 @@
 _site
 .sass-cache
 app/__pycache__/**
+*.pyc
