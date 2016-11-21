@@ -3,9 +3,11 @@
 
     <h1>Mendeleev app</h1>
 
+    <div class="row" style="max-width: 1000px">
+
     <form name="prop_select" method='GET'>
       
-      <div class="form-group">
+      <div class="form-group col-md-4">
         <label>Property:</label>
         <select class="form-control" name="prop">
             {% for key, value in properties.items() %}
@@ -14,7 +16,7 @@
         </select>
       </div>
 
-      <div class="form-group">
+      <div class="form-group col-md-4">
         <label>Color by:</label>
         <select class="form-control" name="colorby">
             {% for key, value in categories.items() %}
@@ -23,7 +25,7 @@
         </select>
       </div>
         
-      <div class="form-group">
+      <div class="form-group col-md-4">
         <label>Colormap:</label>
         <select class="form-control" name="cmap">
             {% for color in colormaps %}
@@ -32,9 +34,13 @@
         </select>
       </div>
 
-      <button type="submit" class="btn btn-md btn-success">Show</button>
-    
+      <div class="text-center">
+        <button type="submit" class="btn btn-md btn-success">Show</button>
+      </div>
+
     </form>
+
+    <div>
 
     {{ plot_div|indent(4)|safe }}
     
