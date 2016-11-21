@@ -2,7 +2,6 @@ from collections import OrderedDict
 
 import pandas as pd
 
-import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 
@@ -38,7 +37,7 @@ def colormap_column(df, column, cmap='viridis', missing='#ffffff'):
         HEX color for the missing values (NaN or None)
     '''
 
-    colormap = plt.get_cmap(cmap)
+    colormap = cmx.get_cmap(cmap)
     cnorm = colors.Normalize(vmin=df[column].min(), vmax=df[column].max())
     scalarmap = cmx.ScalarMappable(norm=cnorm, cmap=colormap)
     out = pd.DataFrame(index=df.index)
@@ -126,7 +125,7 @@ def get_cmap_names():
     'return colormap names'
 
     return ['viridis', 'inferno', 'magma', 'plasma'] +\
-        sorted(m for m in plt.cm.datad if not m.endswith("_r"))
+        sorted(m for m in cmx.datad if not m.endswith("_r"))
 
 
 def periodic_plot(cds, title='Periodic Table', width=1000,
