@@ -15,13 +15,77 @@
 
     {{ plot_script|indent(4)|safe }}
 
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+
+    <!-- Font Awesome  -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/font-awesome.css') }}">
+
     <link href="{{ url_for('static', filename='css/mendeleev.css') }}" type="text/css" rel="stylesheet" />
 
   </head>
-  <body class="mv-body">
+  <body>
 
-    {% block content %}
-    {% endblock %}
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+
+          <a href="../" class="navbar-brand">Mendeleev</a>
+          <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+        <div class="navbar-collapse collapse navbar-right" id="navbar-main">
+          <ul class="nav navbar-nav">
+            <li>
+              <a href="/periodic/"> Periodic Table</a>
+            </li>
+            <li>
+              <a href="/correlations/"> Correlations </a>
+            </li>
+            <li>
+              <a href="/data/"> Data </a>
+            </li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row center-block">
+
+        {% block content %}
+        {% endblock %}
+
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="footer-col-wrapper">
+        <div class="col-md-12 text-center">
+
+          <hr/>
+
+          <p class="text-muted">
+            <i class="fa fa-copyright" aria-hidden="true"></i> Copyright 2016 by Łukasz Mentel
+          </p>
+
+          <div class="social text-muted" style="font-size: 32px;">
+          <ul class="list-inline">
+          <li>
+            <a href="https://github.com/lmmentel/mendeleevapp"><i class="fa fa-github" aria-hidden="true"></i>  </a>
+          </li>
+
+        </ul>
+        </div>
+
+
+        </div>
+      </div>
+    </div>
 
   </body>
 </html>
