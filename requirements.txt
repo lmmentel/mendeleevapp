@@ -1,7 +1,8 @@
+flask
+gunicorn
 bokeh
 numpy
 pandas
 sqlalchemy
 mendeleev
 matplotlib
-flask
