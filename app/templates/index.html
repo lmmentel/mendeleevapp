@@ -3,10 +3,10 @@
 
     <h1>Mendeleev app</h1>
 
-    <div class="row" style="max-width: 1000px">
+    <div class="row" style="max-width: 1000px;">
 
     <form name="prop_select" method='GET'>
-      
+
       <div class="form-group col-md-4">
         <label>Property:</label>
         <select class="form-control" name="prop">
@@ -24,7 +24,7 @@
             {% endfor %}
         </select>
       </div>
-        
+
       <div class="form-group col-md-4">
         <label>Colormap:</label>
         <select class="form-control" name="cmap">
@@ -40,9 +40,8 @@
 
     </form>
 
-    <div>
+    </div>
 
     {{ plot_div|indent(4)|safe }}
-    
 
 {% endblock %}
