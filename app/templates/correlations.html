@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+    <h1>Correlations</h1>
+
+    <form name="axis_select" method='GET'>
+
+      <div class="form-group">
+        <label>X axis:</label>
+        <select class="form-control" name="x">
+            {% for key, value in properties.items() %}
+                <option {% if xselected==key %} selected="selected"{% endif %} value="{{ key }}">{{ value }}</option>
+            {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Y axis:</label>
+        <select class="form-control" name="y">
+            {% for key, value in properties.items() %}
+                <option {% if yselected==key %} selected="selected"{% endif %} value="{{ key }}">{{ value }}</option>
+            {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Category:</label>
+        <select class="form-control" name="categ">
+            {% for key, value in categories.items() %}
+                <option {% if catselected==key %} selected="selected"{% endif %} value="{{ key }}">{{ value }}</option>
+            {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-md btn-success">Show</button>
+    </form>
+
+
+    {{ plot_div|indent(4)|safe }}
+
+{% endblock %}
