@@ -95,7 +95,7 @@ def get_category_names():
     '''
 
     categattrs = ['block', 'group_id', 'period', 'series_id']
-    out = {a: a.replace('_id', '').capitalize() for a in categattrs}
+    out = {a: a.replace('_id', '').title() for a in categattrs}
     return OrderedDict(sorted(out.items(), key=lambda x: x[0]))
 
 
@@ -112,7 +112,7 @@ def get_property_names(data):
 
     attrs = list(set(propattrs) - set(exclude))
 
-    properties = {p: p.replace('_', ' ').capitalize() for p in attrs}
+    properties = {p: p.replace('_', ' ').title() for p in attrs}
 
     for k, v in properties.items():
         if k.startswith('en_'):
@@ -167,7 +167,7 @@ def periodic_plot(cds, title='Periodic Table', width=1000,
                  y_range=(10.0, 0.5),
                  plot_width=width,
                  plot_height=height,
-                 tools='resize,hover,save',
+                 tools='pan,box_zoom,resize,save',
                  toolbar_location='above',
                  toolbar_sticky=False,
                  )
@@ -223,9 +223,11 @@ def set_property(df, colname, decimals=4):
 
 
 def set_colors(df, colorby, cmap):
+    '''
+    Create a `color` column in the `df` DataFrame with HEX color
+    codes from `cmap` colormap
+    '''
 
-    #if colorby == 'series_id':
-    #    df['color'] = df['series_colors']
     if colorby == 'block':
         df['temp'] = df['block'].map(dict((b, i) for i, b in enumerate(df['block'].unique())))
         dfc = colormap_column(df, 'temp', cmap=cmap, missing='#ffffff')
@@ -265,7 +267,7 @@ def make_table(cds, properties):
 @app.route('/')
 @app.route('/periodic/')
 def index():
-    'create the plot'
+    'Create the periodic table plot'
 
     args = flask.request.args
 
@@ -283,7 +285,7 @@ def index():
     data = set_property(data, prop)
     data = set_colors(data, colorby, cmap)
 
-    data[prop].round(decimals=4).astype(str)
+    data.loc[:, prop] = data[prop].round(decimals=4).astype(str)
 
     js_resources = INLINE.render_js()
     css_resources = INLINE.render_css()
@@ -327,7 +329,7 @@ def correlation():
     categories['None'] = '---'
     categories = OrderedDict(sorted(categories.items(), key=lambda x: x[0]))
 
-    fig = Figure(title='{} vs {}'.format(xattr, yattr),
+    fig = Figure(title='{} vs {}'.format(properties[xattr], properties[yattr]),
                  plot_width=1000,
                  plot_height=800,
                  tools='pan,box_zoom,resize,save',
@@ -341,12 +343,14 @@ def correlation():
     if categ == 'None':
         color = Spectral6[0]
     else:
-        df_color = colormap_column(data, categ)
-        color = df_color['cmap'].values
+        #df_color = colormap_column(data, categ)
+        #color = df_color['cmap'].values
+        data = set_colors(data, categ, cmap='viridis')
+        color = 'color'
 
     fig.circle(x=xattr, y=yattr, fill_alpha=0.6, size=10,
                source=ColumnDataSource(data=data),
-               color=color)
+               color=color, legend=categ)
 
     hover = HoverTool(tooltips=[
         ("symbol", "@symbol"),
