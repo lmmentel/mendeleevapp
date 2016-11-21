@@ -15,8 +15,9 @@
 /*  color: #fff;
   background: #2F2F2F;*/
   /*font-family: 'Noto Sans', sans-serif;*/
-  width: 1000px;
+  max-width: 1000px;
   margin: auto;
+  padding-top: 70px;
 }
 
 .mv-table {
