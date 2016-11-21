@@ -28,3 +28,7 @@
 .inline li {
   display: inline;
 }
+
+.bk-root .bk-slick-header-column.bk-ui-state-default {
+  height: 25px!important;
+}
