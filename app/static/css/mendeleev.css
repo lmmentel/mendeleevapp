@@ -10,10 +10,10 @@
   line-height: 1.42857143;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-/*  color: #333333;
-  background-color: #ffffff;*/
-  color: #fff;
-  background: #2F2F2F;
+  color: #333333;
+  background-color: #ffffff;
+/*  color: #fff;
+  background: #2F2F2F;*/
   /*font-family: 'Noto Sans', sans-serif;*/
   width: 1000px;
   margin: auto;
@@ -22,4 +22,8 @@
 .mv-table {
   width: 800px;
   margin: auto;
+}
+
+.inline li {
+  display: inline;
 }
