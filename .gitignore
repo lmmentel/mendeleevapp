@@ -3,3 +3,6 @@ _site
 .sass-cache
 app/__pycache__/**
 *.pyc
+ipynb/.ipynb_checkpoints/**
+ipynb/*.pkl
+ipynb/*.json
