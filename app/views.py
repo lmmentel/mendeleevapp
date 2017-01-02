@@ -1,5 +1,6 @@
 from collections import OrderedDict
 
+import numpy as np
 import pandas as pd
 
 import matplotlib.colors as colors
@@ -11,14 +12,21 @@ from bokeh.models.widgets import DataTable, TableColumn
 from bokeh.embed import components
 from bokeh.resources import INLINE
 from bokeh.util.string import encode_utf8
-from bokeh.palettes import Spectral6
+from bokeh.palettes import Spectral6, viridis
+from bokeh.models.mappers import CategoricalColorMapper
 
 import flask
 from flask import render_template
 
-from mendeleev import get_table, element
+from mendeleev import get_table
 
 from mendeleevapp import app
+
+from datautils import get_data
+
+
+PLOT_WIDTH = 1200
+PLOT_HEIGHT = 800
 
 
 def colormap_column(df, column, cmap='viridis', missing='#ffffff'):
@@ -49,53 +57,16 @@ def colormap_column(df, column, cmap='viridis', missing='#ffffff'):
     return out
 
 
-def get_data():
-
-    elements = get_table('elements')
-    series = get_table('series')
-    groups = get_table('groups')
-
-    elements = pd.merge(elements, series, left_on='series_id', right_on='id',
-                        how='left', suffixes=('', '_series'))
-    elements = pd.merge(elements, groups, left_on='group_id', right_on='group_id',
-                        how='left', suffixes=('', '_group'))
-
-    elements.rename(columns={'color': 'series_colors'}, inplace=True)
-
-
-#    en_scales = ['allred-rochow', 'cottrell-sutton', 'gordy',
-#                 'martynov-batsanov', 'mulliken', 'nagle', 'sanderson']
-
-#    for scale in en_scales:
-#        elements['en_' + scale] = [element(row.symbol).electronegativity(scale=scale) for i, row in elements.iterrows()]
-
-    elements.loc[elements['group_id'].notnull(), 'x'] = \
-        elements.loc[elements['group_id'].notnull(), 'group_id'].astype(int)
-    elements.loc[elements['period'].notnull(), 'y'] = \
-        elements.loc[elements['period'].notnull(), 'period'].astype(int)
-
-    for period in [6, 7]:
-        mask = (elements['block'] == 'f') & (elements['period'] == period)
-        elements.loc[mask, 'x'] = elements.loc[mask, 'atomic_number'] -\
-                                        elements.loc[mask, 'atomic_number'].min() + 3
-        elements.loc[mask, 'y'] = elements.loc[mask, 'period'] + 2.5
-
-    # additional columns for positioning of the text
-
-    elements.loc[:, 'y_anumber'] = elements['y'] - 0.3
-    elements.loc[:, 'y_name'] = elements['y'] + 0.2
-
-    return elements
-
-
 def get_category_names():
     '''
     Return a dict with attribute names as keys and their printable names as
     values
     '''
 
-    categattrs = ['block', 'group_id', 'period', 'series_id']
-    out = {a: a.replace('_id', '').title() for a in categattrs}
+    out = {'None': '---', 'block': 'Block', 'group_name': 'Group',
+           'period': 'Period', 'name_series': 'Series',
+           'is_radioactive': 'Radioactive', 'is_monoisotopic': 'Monoisotopic'}
+
     return OrderedDict(sorted(out.items(), key=lambda x: x[0]))
 
 
@@ -104,7 +75,9 @@ def get_property_names(data):
     propattrs = data.columns.values
 
     exclude = ['annotation', 'color', 'cpk_color', 'description',
-               'electronic_configuration', 'id', 'index',
+               'electronic_configuration',
+               'is_radioactive', 'is_monoisotopic',
+               'id', 'index',
                'jmol_color', 'lattice_structure', 'name', 'symbol',
                'x', 'y', 'y_anumber', 'y_name', 'y_prop',
                'symbol_group', 'name_group', 'name_series', 'color_series',
@@ -128,7 +101,7 @@ def get_cmap_names():
         sorted(m for m in cmx.datad if not m.endswith("_r"))
 
 
-def periodic_plot(cds, title='Periodic Table', width=1000,
+def periodic_plot(cds, title='Periodic Table', width=1200,
                   height=800, missing='#ffffff', cmap='viridis',
                   showfblock=True, long_version=False):
     '''
@@ -167,7 +140,7 @@ def periodic_plot(cds, title='Periodic Table', width=1000,
                  y_range=(10.0, 0.5),
                  plot_width=width,
                  plot_height=height,
-                 tools='pan,box_zoom,resize,save',
+                 tools='box_zoom,pan,resize,save,reset',
                  toolbar_location='above',
                  toolbar_sticky=False,
                  )
@@ -187,14 +160,14 @@ def periodic_plot(cds, title='Periodic Table', width=1000,
         "text_baseline": "middle"
     }
 
-    fig.text(x="x", y="y", text="symbol",
+    fig.text(x="x", y="y_symbol", text="symbol",
              text_font_style="bold", text_font_size="15pt", **text_props)
 
     fig.text(x="x", y="y_anumber", text="atomic_number",
              text_font_size="9pt", **text_props)
 
     fig.text(x="x", y="y_name", text="name",
-             text_font_size="6pt", **text_props)
+             text_font_size="7pt", **text_props)
 
     fig.text(x="x", y="y_prop", text='property',
              text_font_size="7pt", **text_props)
@@ -232,9 +205,16 @@ def set_colors(df, colorby, cmap):
         df['temp'] = df['block'].map(dict((b, i) for i, b in enumerate(df['block'].unique())))
         dfc = colormap_column(df, 'temp', cmap=cmap, missing='#ffffff')
         df['color'] = dfc['cmap']
+        df['legend'] = df['block']
     elif colorby in ['period', 'group_id', 'series_id']:
         dfc = colormap_column(df, colorby, cmap=cmap, missing='#ffffff')
         df['color'] = dfc['cmap']
+        if colorby == 'series_id':
+            df['legend'] = df['name_series']
+        elif colorby == 'group_id':
+            df['legend'] = df['name_group']
+        else:
+            df['legend'] = df[colorby]
     elif colorby == 'property':
         dfc = colormap_column(df, 'property', cmap=cmap, missing='#ffffff')
         df['color'] = dfc['cmap']
@@ -259,7 +239,7 @@ def make_table(cds, properties):
         table_columns.append(TableColumn(field=attr, title=name))
 
     table = DataTable(source=cds, columns=table_columns,
-                      width=1000, height=800)
+                      width=PLOT_WIDTH, height=PLOT_HEIGHT)
 
     return table
 
@@ -285,13 +265,14 @@ def index():
     data = set_property(data, prop)
     data = set_colors(data, colorby, cmap)
 
-    data.loc[:, prop] = data[prop].round(decimals=4).astype(str)
+    if data[prop].dtype == np.float64:
+        data.loc[:, prop] = data[prop].round(decimals=4).astype(str)
 
     js_resources = INLINE.render_js()
     css_resources = INLINE.render_css()
 
     fig = periodic_plot(ColumnDataSource(data), title='Periodic Table',
-                        width=1000, height=800)
+                        width=PLOT_WIDTH, height=PLOT_HEIGHT)
 
     script, div = components(fig)
 
@@ -321,18 +302,33 @@ def correlation():
     xattr = args.get('x', 'atomic_number')
     yattr = args.get('y', 'covalent_radius_pyykko')
     categ = args.get('categ', 'period')
-    # cmap = args.get('cmap', 'viridis')
 
     data = get_data()
     properties = get_property_names(data)
     categories = get_category_names()
-    categories['None'] = '---'
-    categories = OrderedDict(sorted(categories.items(), key=lambda x: x[0]))
+
+    if categ == 'None':
+        pass
+    elif categ == 'block':
+        factors = list(data[categ].unique())
+        ccm = CategoricalColorMapper(palette='Set1_4', factors=factors)
+    elif categ == 'period':
+        factors = list(data[categ].unique())
+        ccm = CategoricalColorMapper(palette='Dark2_7', factors=factors)
+    elif categ == 'name_series':
+        factors = list(data[categ].unique())
+        ccm = CategoricalColorMapper(palette='Spectral10', factors=factors)
+    elif categ == 'group_name':
+        factors = list(data[categ].unique())
+        ccm = CategoricalColorMapper(palette=viridis(18), factors=factors)
+    elif categ in ['is_radioactive', 'is_monoisotopic']:
+        factors = list(data[categ].unique())
+        ccm = CategoricalColorMapper(palette='Set1_3', factors=factors)
 
     fig = Figure(title='{} vs {}'.format(properties[xattr], properties[yattr]),
-                 plot_width=1000,
-                 plot_height=800,
-                 tools='pan,box_zoom,resize,save',
+                 plot_width=PLOT_WIDTH,
+                 plot_height=PLOT_HEIGHT,
+                 tools='box_zoom,pan,resize,save,reset',
                  toolbar_location='above',
                  toolbar_sticky=False,
                  )
@@ -341,16 +337,22 @@ def correlation():
     fig.yaxis.axis_label = properties[yattr]
 
     if categ == 'None':
-        color = Spectral6[0]
+        legend = None
+        color_dict = '#1F77B4'
     else:
-        #df_color = colormap_column(data, categ)
-        #color = df_color['cmap'].values
-        data = set_colors(data, categ, cmap='viridis')
-        color = 'color'
+        legend = categ
+        color_dict = {'field': categ, 'transform': ccm}
 
-    fig.circle(x=xattr, y=yattr, fill_alpha=0.6, size=10,
+    fig.circle(x=xattr, y=yattr, fill_alpha=0.7, size=10,
                source=ColumnDataSource(data=data),
-               color=color, legend=categ)
+               fill_color=color_dict,
+               line_color=color_dict,
+               legend=legend)
+
+    if categ != 'None':
+        fig.legend.location = (0, 0)
+        fig.legend.plot = None
+        fig.add_layout(fig.legend[0], 'right')
 
     hover = HoverTool(tooltips=[
         ("symbol", "@symbol"),
