@@ -189,8 +189,9 @@ def periodic_plot(cds, title='Periodic Table', width=1200,
 def set_property(df, colname, decimals=4):
     'Set the column `property with formatted values` from `colname`'
 
-    df.loc[df[colname].notnull(), 'y_prop'] = df.loc[df[colname].notnull(), 'y'] + 0.35
-    df.loc[df[colname].notnull(), 'property'] = df.loc[df[colname].notnull(), colname]
+    mask = df[colname].notnull()
+    df.loc[mask, 'y_prop'] = df.loc[mask, 'y'] + 0.35
+    df.loc[mask, 'property'] = df.loc[mask, colname]
 
     return df
 
@@ -409,5 +410,15 @@ def data():
         js_resources=js_resources,
         css_resources=css_resources,
     )
+
+    return encode_utf8(html)
+
+
+@app.route('/info/')
+def info():
+
+    html = render_template('base.html')
+
+    'Lukasz Mentel:'
 
     return encode_utf8(html)
