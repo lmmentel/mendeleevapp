@@ -4,5 +4,5 @@ bokeh
 numpy
 pandas
 sqlalchemy
-mendeleev==0.2.12
+mendeleev==0.3.0
 matplotlib
