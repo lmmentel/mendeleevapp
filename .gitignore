@@ -6,3 +6,5 @@ app/__pycache__/**
 ipynb/.ipynb_checkpoints/**
 ipynb/*.pkl
 ipynb/*.json
+mendeleevapp.sublime-project
+mendeleevapp.sublime-workspace
