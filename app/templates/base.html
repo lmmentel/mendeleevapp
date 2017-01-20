@@ -9,11 +9,8 @@
 
     <title>mendeleev</title>
 
-    {{ js_resources|indent(4)|safe }}
-
-    {{ css_resources|indent(4)|safe }}
-
-    {{ plot_script|indent(4)|safe }}
+    {% block header %}
+    {% endblock %}
 
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
@@ -40,15 +37,10 @@
         </div>
         <div class="navbar-collapse collapse navbar-right" id="navbar-main">
           <ul class="nav navbar-nav">
-            <li>
-              <a href="/periodic/"> Periodic Table</a>
-            </li>
-            <li>
-              <a href="/correlations/"> Correlations </a>
-            </li>
-            <li>
-              <a href="/data/"> Data </a>
-            </li>
+            <li> <a href="/periodic/"> Periodic Table</a> </li>
+            <li> <a href="/correlations/"> Correlations </a> </li>
+            <li> <a href="/data/"> Data </a> </li>
+            <li> <a href="/info/"> Info </a> </li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>

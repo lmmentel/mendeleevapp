@@ -1,4 +1,15 @@
 {% extends "base.html" %}
+
+{% block header %}
+
+    {{ js_resources|indent(4)|safe }}
+
+    {{ css_resources|indent(4)|safe }}
+
+    {{ plot_script|indent(4)|safe }}
+
+{% endblock %}
+
 {% block content %}
 
     <h1>Mendeleev app</h1>

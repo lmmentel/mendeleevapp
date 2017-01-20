@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+    <div class="row" style="max-width: 800px;margin: 0 auto;min-height: 800px;">
+
+        <h1>Info</h1>
+    
+        <p> Author: {{ author }} </p>
+        
+        <ul>
+          <li>github repo: <a href="http://github.com/lmmentel/mendeleevapp">github.com:lmmentel/mendeleevapp.git</a></li>
+          <li>documentation: in progress</li>
+        </ul>
+
+        <h2> Local installation </h2>
+        <p>
+        If you would like to try the app locally clone the repository
+        
+        git clone git@github.com:lmmentel/mendeleevapp.git
+
+        </p>
+
+        <h2> Dependencies </h2>
+
+        <ul>
+          <li>flask</li>
+          <li>gunicorn</li>
+          <li>bokeh</li>
+          <li>numpy</li>
+          <li>pandas</li>
+          <li>sqlalchemy</li>
+          <li>mendeleev</li>
+          <li>matplotlib</li>
+          <li>foreman</li>
+        </ul>
+
+    </div>
+
+{% endblock %}

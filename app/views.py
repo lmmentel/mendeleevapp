@@ -18,8 +18,6 @@ from bokeh.models.mappers import CategoricalColorMapper
 import flask
 from flask import render_template
 
-from mendeleev import get_table
-
 from mendeleevapp import app
 
 from datautils import get_data
@@ -417,8 +415,7 @@ def data():
 @app.route('/info/')
 def info():
 
-    html = render_template('base.html')
-
-    'Lukasz Mentel:'
+    html = render_template('info.html',
+                           author="Łukasz Mentel")
 
     return encode_utf8(html)
