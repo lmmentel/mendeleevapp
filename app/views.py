@@ -12,8 +12,8 @@ from bokeh.models.widgets import DataTable, TableColumn
 from bokeh.embed import components
 from bokeh.resources import INLINE
 from bokeh.util.string import encode_utf8
-from bokeh.palettes import Spectral6, viridis
-from bokeh.models.mappers import CategoricalColorMapper
+from bokeh.palettes import viridis
+from bokeh.models.mappers import CategoricalColorMapper, LinearColorMapper
 
 import flask
 from flask import render_template
@@ -25,6 +25,15 @@ from datautils import get_data
 
 PLOT_WIDTH = 1200
 PLOT_HEIGHT = 800
+HOVER_TOOLTIPS = [
+    ("symbol", "@symbol"),
+    ("name", "@name"),
+    ("atomic number", "@atomic_number"),
+    ("electronic configuration", "@electronic_configuration"),
+    ("block", "@block"),
+    ("group", "@name_group"),
+    ("series", "@name_series"),
+]
 
 
 def colormap_column(df, column, cmap='viridis', missing='#ffffff'):
@@ -75,7 +84,7 @@ def get_property_names(data):
     exclude = ['annotation', 'color', 'cpk_color', 'description',
                'electronic_configuration',
                'is_radioactive', 'is_monoisotopic',
-               'id', 'index',
+               'id', 'index', 'molcas_gv_color',
                'jmol_color', 'lattice_structure', 'name', 'symbol',
                'x', 'y', 'y_anumber', 'y_name', 'y_prop',
                'symbol_group', 'name_group', 'name_series', 'color_series',
@@ -99,8 +108,8 @@ def get_cmap_names():
         sorted(m for m in cmx.datad if not m.endswith("_r"))
 
 
-def periodic_plot(cds, title='Periodic Table', width=1200,
-                  height=800, missing='#ffffff', cmap='viridis',
+def periodic_plot(cds, title='Periodic Table', width=PLOT_WIDTH,
+                  height=PLOT_HEIGHT, missing='#ffffff', cmap='viridis',
                   showfblock=True, long_version=False):
     '''
     Create the periodic plot
@@ -172,12 +181,7 @@ def periodic_plot(cds, title='Periodic Table', width=1200,
 
     fig.grid.grid_line_color = None
 
-    hover = HoverTool(tooltips=[
-        ("symbol", "@symbol"),
-        ("name", "@name"),
-        ("atomic number", "@atomic_number"),
-        ("electronic configuration", "@electronic_configuration"),
-    ])
+    hover = HoverTool(tooltips=HOVER_TOOLTIPS)
 
     fig.add_tools(hover)
 
@@ -292,6 +296,32 @@ def index():
     return encode_utf8(html)
 
 
+def get_color_mapper(category, data):
+
+    if category == 'None':
+        pass
+    elif category == 'block':
+        factors = list(data[category].unique())
+        ccm = CategoricalColorMapper(palette='Set1_4', factors=factors)
+    elif category == 'period':
+        factors = list(data[category].unique())
+        ccm = CategoricalColorMapper(palette='Dark2_7', factors=factors)
+    elif category == 'name_series':
+        factors = list(data[category].unique())
+        ccm = CategoricalColorMapper(palette='Spectral10', factors=factors)
+    elif category == 'group_name':
+        factors = list(data[category].unique())
+        ccm = CategoricalColorMapper(palette=viridis(18), factors=factors)
+    elif category in ['is_radioactive', 'is_monoisotopic']:
+        factors = list(data[category].unique())
+        ccm = CategoricalColorMapper(palette='Set1_3', factors=factors)
+    elif category == 'property':
+        ccm = LinearColorMapper(palette='Set1_3', factors=factors)
+
+
+    return ccm
+
+
 @app.route('/correlations/')
 def correlation():
     'the scatter plot'
@@ -306,24 +336,6 @@ def correlation():
     properties = get_property_names(data)
     categories = get_category_names()
 
-    if categ == 'None':
-        pass
-    elif categ == 'block':
-        factors = list(data[categ].unique())
-        ccm = CategoricalColorMapper(palette='Set1_4', factors=factors)
-    elif categ == 'period':
-        factors = list(data[categ].unique())
-        ccm = CategoricalColorMapper(palette='Dark2_7', factors=factors)
-    elif categ == 'name_series':
-        factors = list(data[categ].unique())
-        ccm = CategoricalColorMapper(palette='Spectral10', factors=factors)
-    elif categ == 'group_name':
-        factors = list(data[categ].unique())
-        ccm = CategoricalColorMapper(palette=viridis(18), factors=factors)
-    elif categ in ['is_radioactive', 'is_monoisotopic']:
-        factors = list(data[categ].unique())
-        ccm = CategoricalColorMapper(palette='Set1_3', factors=factors)
-
     fig = Figure(title='{} vs {}'.format(properties[xattr], properties[yattr]),
                  plot_width=PLOT_WIDTH,
                  plot_height=PLOT_HEIGHT,
@@ -334,6 +346,8 @@ def correlation():
 
     fig.xaxis.axis_label = properties[xattr]
     fig.yaxis.axis_label = properties[yattr]
+
+    ccm = get_color_mapper(categ, data)
 
     if categ == 'None':
         legend = None
@@ -353,12 +367,7 @@ def correlation():
         fig.legend.plot = None
         fig.add_layout(fig.legend[0], 'right')
 
-    hover = HoverTool(tooltips=[
-        ("symbol", "@symbol"),
-        ("name", "@name"),
-        ("atomic number", "@atomic_number"),
-        ("electronic configuration", "@electronic_configuration"),
-    ])
+    hover = HoverTool(tooltips=HOVER_TOOLTIPS)
 
     fig.add_tools(hover)
 
