@@ -36,7 +36,7 @@ def add_plot_columns(elements):
 
 def get_data():
 
-    fpkl = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+    fpkl = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data',
                         "neutral.pkl")
 
     return pd.read_pickle(fpkl)
