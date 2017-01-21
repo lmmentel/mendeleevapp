@@ -18,7 +18,7 @@
 
     <form name="prop_select" method='GET'>
 
-      <div class="form-group col-md-4">
+      <div class="form-group col-md-3">
         <label>Property:</label>
         <select class="form-control" name="prop">
             {% for key, value in properties.items() %}
@@ -27,7 +27,7 @@
         </select>
       </div>
 
-      <div class="form-group col-md-4">
+      <div class="form-group col-md-3">
         <label>Color by:</label>
         <select class="form-control" name="colorby">
             {% for key, value in categories.items() %}
@@ -36,16 +36,16 @@
         </select>
       </div>
 
-      <div class="form-group col-md-4">
-        <label>Colormap:</label>
-        <select class="form-control" name="cmap">
-            {% for color in colormaps %}
-                <option {% if cmapselected==color %} selected="selected"{% endif %} value="{{ color }}">{{ color }}</option>
+      <div class="form-group col-md-3">
+        <label>Palettes:</label>
+        <select class="form-control" name="palette">
+            {% for key, value in palettes.items() %}
+                <option {% if palselected==key %} selected="selected"{% endif %} value="{{ key }}">{{ value }}</option>
             {% endfor %}
         </select>
       </div>
 
-      <div class="text-center">
+      <div class="text-center col-md-3">
         <button type="submit" class="btn btn-md btn-success">Show</button>
       </div>
 
