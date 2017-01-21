@@ -1,8 +1,8 @@
 flask
 gunicorn
-bokeh
+bokeh>=0.12.4
 numpy
 pandas
 sqlalchemy
-mendeleev==0.3.0
+mendeleev>=0.3.0
 matplotlib
