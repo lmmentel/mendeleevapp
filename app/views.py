@@ -1,10 +1,6 @@
 from collections import OrderedDict
 
 import numpy as np
-import pandas as pd
-
-import matplotlib.colors as colors
-import matplotlib.cm as cmx
 
 from bokeh.plotting import Figure
 from bokeh.models import HoverTool, ColumnDataSource, FixedTicker
@@ -18,7 +14,7 @@ from bokeh.models.mappers import CategoricalColorMapper, LinearColorMapper
 import flask
 from flask import render_template
 
-from mendeleevapp import app
+from mendeleevapp import app, __version__
 
 from datautils import get_data
 
@@ -34,34 +30,6 @@ HOVER_TOOLTIPS = [
     ("group", "@name_group"),
     ("series", "@name_series"),
 ]
-
-
-def colormap_column(df, column, cmap='viridis', missing='#ffffff'):
-    '''
-    Return a new DataFrame with the same size (and index) as `df` with a column
-    `cmap` containing HEX color mapping from `cmap` colormap.
-
-    Args:
-      df : DataFrmae
-        Pandas DataFrame with the data
-      column : str
-        Name of the column to be color mapped
-      cmap : str
-        Name of the colormap, see matplotlib.org
-      missing : str
-        HEX color for the missing values (NaN or None)
-    '''
-
-    colormap = cmx.get_cmap(cmap)
-    cnorm = colors.Normalize(vmin=df[column].min(), vmax=df[column].max())
-    scalarmap = cmx.ScalarMappable(norm=cnorm, cmap=colormap)
-    out = pd.DataFrame(index=df.index)
-    mask = df[column].isnull()
-    rgba = scalarmap.to_rgba(df[column])
-    out.loc[:, 'cmap'] = [colors.rgb2hex(row) for row in rgba]
-    out.loc[mask, 'cmap'] = missing
-
-    return out
 
 
 def get_category_names():
@@ -101,16 +69,43 @@ def get_property_names(data):
     return OrderedDict(sorted(properties.items(), key=lambda x: x[0]))
 
 
-def get_cmap_names():
-    'return colormap names'
+def get_color_mapper(column, df, palette='Viridis256'):
+    '''
+    Return a color mapper instace for a given category or continuous
+    properties
 
-    return ['viridis', 'inferno', 'magma', 'plasma'] +\
-        sorted(m for m in cmx.datad if not m.endswith("_r"))
+    Args:
+        column :  str
+            name of the color that should be color mapped
+        df : pandas.DataFrame
+            data frame
+    '''
+
+    cmaps = {
+        'block': 'Set1_4',
+        'period': 'Dark2_7',
+        'name_series': 'Spectral10',
+        'group_name': viridis(18),
+        'is_radioactive': 'Set1_3',
+        'is_monoisotopic': 'Set1_3',
+    }
+
+    if column in cmaps.keys():
+        factors = list(df[column].unique())
+        ccm = CategoricalColorMapper(palette=cmaps[column], factors=factors)
+    elif column == 'value':
+        ccm = LinearColorMapper(palette=palette, low=df[column].min(),
+                                high=df[column].max(), nan_color='#ffffff')
+    else:
+        ccm = None
+
+    return ccm
 
 
 def periodic_plot(cds, title='Periodic Table', width=PLOT_WIDTH,
-                  height=PLOT_HEIGHT, missing='#ffffff', cmap='viridis',
-                  showfblock=True, long_version=False):
+                  height=PLOT_HEIGHT, cmap='viridis',
+                  showfblock=True, long_version=False,
+                  color_mapper=None):
     '''
     Create the periodic plot
 
@@ -125,8 +120,6 @@ def periodic_plot(cds, title='Periodic Table', width=PLOT_WIDTH,
         Width of the figure in pixels
       height : int
         Height of the figure in pixels
-      missing : str
-        Hex code of the color to be used for the missing values
       cmap : str
         Colormap to use, see matplotlib colormaps
       long_version : bool
@@ -152,7 +145,13 @@ def periodic_plot(cds, title='Periodic Table', width=PLOT_WIDTH,
                  toolbar_sticky=False,
                  )
 
-    fig.rect("x", "y", 0.9, 0.9, color='color', source=cds, fill_alpha=0.6)
+    if color_mapper is None:
+        color_dict = '#1F77B4'
+    else:
+        color_dict = {'field': 'value', 'transform': color_mapper}
+
+    fig.rect("x", "y", 0.9, 0.9, source=cds, fill_alpha=0.6,
+             fill_color=color_dict, line_color=color_dict)
 
     # adjust the ticks and axis bounds
     fig.yaxis.bounds = (1, 7)
@@ -176,7 +175,7 @@ def periodic_plot(cds, title='Periodic Table', width=PLOT_WIDTH,
     fig.text(x="x", y="y_name", text="name",
              text_font_size="7pt", **text_props)
 
-    fig.text(x="x", y="y_prop", text='property',
+    fig.text(x="x", y="y_prop", text='value_str',
              text_font_size="7pt", **text_props)
 
     fig.grid.grid_line_color = None
@@ -188,39 +187,22 @@ def periodic_plot(cds, title='Periodic Table', width=PLOT_WIDTH,
     return fig
 
 
-def set_property(df, colname, decimals=4):
+def set_property(colname, colorby, df):
     'Set the column `property with formatted values` from `colname`'
 
     mask = df[colname].notnull()
     df.loc[mask, 'y_prop'] = df.loc[mask, 'y'] + 0.35
-    df.loc[mask, 'property'] = df.loc[mask, colname]
 
-    return df
+    if colorby == 'property':
+        df.loc[:, 'value'] = df.loc[:, colname].copy()
+    else:
+        df.loc[:, 'value'] = df.loc[:, colorby].copy()
 
-
-def set_colors(df, colorby, cmap):
-    '''
-    Create a `color` column in the `df` DataFrame with HEX color
-    codes from `cmap` colormap
-    '''
-
-    if colorby == 'block':
-        df['temp'] = df['block'].map(dict((b, i) for i, b in enumerate(df['block'].unique())))
-        dfc = colormap_column(df, 'temp', cmap=cmap, missing='#ffffff')
-        df['color'] = dfc['cmap']
-        df['legend'] = df['block']
-    elif colorby in ['period', 'group_id', 'series_id']:
-        dfc = colormap_column(df, colorby, cmap=cmap, missing='#ffffff')
-        df['color'] = dfc['cmap']
-        if colorby == 'series_id':
-            df['legend'] = df['name_series']
-        elif colorby == 'group_id':
-            df['legend'] = df['name_group']
-        else:
-            df['legend'] = df[colorby]
-    elif colorby == 'property':
-        dfc = colormap_column(df, 'property', cmap=cmap, missing='#ffffff')
-        df['color'] = dfc['cmap']
+    df.loc[:, 'value_str'] = ''
+    if df[colname].dtype == np.float64:
+        df.loc[mask, 'value_str'] = df.loc[mask, colname].apply('{:>.4f}'.format)
+    else:
+        df.loc[mask, 'value_str'] = df.loc[mask, colname].astype(str)
 
     return df
 
@@ -254,28 +236,32 @@ def index():
 
     args = flask.request.args
 
-    prop = args.get('prop', 'mass')
-    colorby = args.get('colorby', 'series_id')
-    cmap = args.get('cmap', 'viridis')
+    sel_col = args.get('prop', 'atomic_weight')
+    colorby = args.get('colorby', 'name_series')
+    palette = args.get('palette', 'Viridis256')
 
     data = get_data()
     properties = get_property_names(data)
     categories = get_category_names()
     categories['property'] = 'Property'
     categories = OrderedDict(sorted(categories.items(), key=lambda x: x[0]))
-    colormaps = get_cmap_names()
+    palettes = {k: k.rstrip('256') for k in
+                ['Viridis256', 'Inferno256', 'Magma256', 'Plasma256']}
 
-    data = set_property(data, prop)
-    data = set_colors(data, colorby, cmap)
-
-    if data[prop].dtype == np.float64:
-        data.loc[:, prop] = data[prop].round(decimals=4).astype(str)
+    # create new columns to display the chosen property
+    data = set_property(sel_col, colorby, data)
 
     js_resources = INLINE.render_js()
     css_resources = INLINE.render_css()
 
+    if colorby == 'property':
+        cmapper = get_color_mapper('value', data, palette=palette)
+    else:
+        cmapper = get_color_mapper(colorby, data)
+
     fig = periodic_plot(ColumnDataSource(data), title='Periodic Table',
-                        width=PLOT_WIDTH, height=PLOT_HEIGHT)
+                        width=PLOT_WIDTH, height=PLOT_HEIGHT,
+                        color_mapper=cmapper)
 
     script, div = components(fig)
 
@@ -285,41 +271,15 @@ def index():
         plot_div=div,
         properties=properties,
         categories=categories,
-        colormaps=colormaps,
-        propselected=prop,
+        palettes=palettes,
+        propselected=sel_col,
         catselected=colorby,
-        cmapselected=cmap,
+        palselected=palette,
         js_resources=js_resources,
         css_resources=css_resources,
     )
 
     return encode_utf8(html)
-
-
-def get_color_mapper(category, data):
-
-    if category == 'None':
-        pass
-    elif category == 'block':
-        factors = list(data[category].unique())
-        ccm = CategoricalColorMapper(palette='Set1_4', factors=factors)
-    elif category == 'period':
-        factors = list(data[category].unique())
-        ccm = CategoricalColorMapper(palette='Dark2_7', factors=factors)
-    elif category == 'name_series':
-        factors = list(data[category].unique())
-        ccm = CategoricalColorMapper(palette='Spectral10', factors=factors)
-    elif category == 'group_name':
-        factors = list(data[category].unique())
-        ccm = CategoricalColorMapper(palette=viridis(18), factors=factors)
-    elif category in ['is_radioactive', 'is_monoisotopic']:
-        factors = list(data[category].unique())
-        ccm = CategoricalColorMapper(palette='Set1_3', factors=factors)
-    elif category == 'property':
-        ccm = LinearColorMapper(palette='Set1_3', factors=factors)
-
-
-    return ccm
 
 
 @app.route('/correlations/')
@@ -330,7 +290,7 @@ def correlation():
 
     xattr = args.get('x', 'atomic_number')
     yattr = args.get('y', 'covalent_radius_pyykko')
-    categ = args.get('categ', 'period')
+    categ = args.get('categ', 'name_series')
 
     data = get_data()
     properties = get_property_names(data)
@@ -400,7 +360,9 @@ def data():
         ('atomic_number', 'Atomic number'),
         ('symbol', 'Symbol'),
         ('name', 'Name'),
-        ('mass', 'Mass'),
+        ('atomic_weight', 'Atomic weight'),
+        ('en_pauling', 'Electronegativity'),
+        ('electron_affinity', 'Electron affinity'),
     ])
 
     table = make_table(ColumnDataSource(data), columns)
@@ -424,7 +386,6 @@ def data():
 @app.route('/info/')
 def info():
 
-    html = render_template('info.html',
-                           author="Łukasz Mentel")
+    html = render_template('info.html', version=__version__)
 
     return encode_utf8(html)
