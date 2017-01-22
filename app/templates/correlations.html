@@ -16,43 +16,52 @@
 
     <div class="row" style="max-width: 1200px;">
 
-    <form name="axis_select" method='GET'>
+      <div class="toolbarparent">
 
-      <div class="form-group col-md-4">
-        <label>X axis:</label>
-        <select class="form-control" name="x">
-            {% for key, value in properties.items() %}
-                <option {% if xselected==key %} selected="selected"{% endif %} value="{{ key }}">{{ value }}</option>
-            {% endfor %}
-        </select>
+        <form name="axis_select" method='GET'>
+
+          <div class="form-group toolbarchild">
+            <label>X axis:</label>
+            <select class="form-control" name="x">
+                {% for key, value in properties.items() %}
+                    <option {% if xselected==key %} selected="selected"{% endif %} value="{{ key }}">{{ value }}</option>
+                {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group toolbarchild">
+            <label>Y axis:</label>
+            <select class="form-control" name="y">
+                {% for key, value in properties.items() %}
+                    <option {% if yselected==key %} selected="selected"{% endif %} value="{{ key }}">{{ value }}</option>
+                {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group toolbarchild">
+            <label>Category:</label>
+            <select class="form-control" name="categ">
+                {% for key, value in categories.items() %}
+                    <option {% if catselected==key %} selected="selected"{% endif %} value="{{ key }}">{{ value }}</option>
+                {% endfor %}
+            </select>
+          </div>
+
+          <div class="toolbarchild">
+            <button type="submit" class="btn btn-md btn-success">Show</button>
+          </div>
+
+        </form>
+
+        </div>
+
       </div>
 
-      <div class="form-group col-md-4">
-        <label>Y axis:</label>
-        <select class="form-control" name="y">
-            {% for key, value in properties.items() %}
-                <option {% if yselected==key %} selected="selected"{% endif %} value="{{ key }}">{{ value }}</option>
-            {% endfor %}
-        </select>
-      </div>
 
-      <div class="form-group col-md-4">
-        <label>Category:</label>
-        <select class="form-control" name="categ">
-            {% for key, value in categories.items() %}
-                <option {% if catselected==key %} selected="selected"{% endif %} value="{{ key }}">{{ value }}</option>
-            {% endfor %}
-        </select>
-      </div>
-
-      <div class="text-center">
-        <button type="submit" class="btn btn-md btn-success">Show</button>
-      </div>
-
-    </form>
+    <div class="row" style="max-width: 1200px;">
+      
+      {{ plot_div|indent(4)|safe }}
 
     </div>
-
-    {{ plot_div|indent(4)|safe }}
 
 {% endblock %}

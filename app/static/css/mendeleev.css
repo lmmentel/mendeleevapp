@@ -29,6 +29,22 @@
   display: inline;
 }
 
+.bk-root {
+  max-width: 1200px;
+}
+
 .bk-root .bk-slick-header-column.bk-ui-state-default {
   height: 25px!important;
+}
+
+.toolbarparent {
+  width:100%;
+  text-align: center;
+}
+
+.toolbarchild {
+  display: inline-block;
+  width: 250px;
+  height: 70px;
+  padding: 20px;
 }
