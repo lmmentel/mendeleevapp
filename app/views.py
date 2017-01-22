@@ -8,7 +8,7 @@ from bokeh.models.widgets import DataTable, TableColumn
 from bokeh.embed import components
 from bokeh.resources import INLINE
 from bokeh.util.string import encode_utf8
-from bokeh.palettes import viridis
+from bokeh.palettes import d3, viridis
 from bokeh.models.mappers import CategoricalColorMapper, LinearColorMapper
 
 import flask
@@ -86,8 +86,8 @@ def get_color_mapper(column, df, palette='Viridis256'):
         'period': 'Dark2_7',
         'name_series': 'Spectral10',
         'group_name': viridis(18),
-        'is_radioactive': 'Set1_3',
-        'is_monoisotopic': 'Set1_3',
+        'is_radioactive': d3['Category10'][4][2:],
+        'is_monoisotopic': d3['Category10'][4][2:],
     }
 
     if column in cmaps.keys():
