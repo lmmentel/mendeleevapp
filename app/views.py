@@ -19,7 +19,7 @@ from mendeleevapp import app, __version__
 from datautils import get_data
 
 
-PLOT_WIDTH = 1200
+PLOT_WIDTH = 1150
 PLOT_HEIGHT = 800
 HOVER_TOOLTIPS = [
     ("symbol", "@symbol"),
