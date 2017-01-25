@@ -176,7 +176,7 @@ def periodic_plot(cds, title='Periodic Table', width=PLOT_WIDTH,
              text_font_size="7pt", **text_props)
 
     fig.text(x="x", y="y_prop", text='value_str',
-             text_font_size="7pt", **text_props)
+             text_font_size="8pt", **text_props)
 
     fig.grid.grid_line_color = None
 
