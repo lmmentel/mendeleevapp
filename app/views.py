@@ -54,7 +54,7 @@ def get_property_names(data):
                'is_radioactive', 'is_monoisotopic',
                'id', 'index', 'molcas_gv_color',
                'jmol_color', 'lattice_structure', 'name', 'symbol',
-               'x', 'y', 'y_anumber', 'y_name', 'y_prop',
+               'x', 'y', 'y_anumber', 'y_name', 'y_prop', 'y_symbol',
                'symbol_group', 'name_group', 'name_series', 'color_series',
                'block', 'group_id', 'period', 'series_id', 'property']
 
@@ -64,7 +64,7 @@ def get_property_names(data):
 
     for k, v in properties.items():
         if k.startswith('en_'):
-            properties[k] = '{} Electronegativity'.format(k.replace('en_', '').title().replace('-', ' and '))
+            properties[k] = 'Electronegativity {}'.format(k.replace('en_', '').title().replace('-', ' and '))
 
     return OrderedDict(sorted(properties.items(), key=lambda x: x[0]))
 
