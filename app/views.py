@@ -9,7 +9,8 @@ from bokeh.embed import components
 from bokeh.resources import INLINE
 from bokeh.util.string import encode_utf8
 from bokeh.palettes import d3, viridis
-from bokeh.models.mappers import CategoricalColorMapper, LinearColorMapper
+from bokeh.models.mappers import (CategoricalColorMapper, LinearColorMapper,
+                                  LogColorMapper)
 
 import flask
 from flask import render_template
@@ -21,6 +22,7 @@ from datautils import get_data
 
 PLOT_WIDTH = 1150
 PLOT_HEIGHT = 800
+SKEW_THRS = 2.0
 HOVER_TOOLTIPS = [
     ("symbol", "@symbol"),
     ("name", "@name"),
@@ -94,8 +96,13 @@ def get_color_mapper(column, df, palette='Viridis256'):
         factors = list(df[column].unique())
         ccm = CategoricalColorMapper(palette=cmaps[column], factors=factors)
     elif column == 'value':
-        ccm = LinearColorMapper(palette=palette, low=df[column].min(),
-                                high=df[column].max(), nan_color='#ffffff')
+
+        if df[column].skew() > SKEW_THRS:
+            ccm = LogColorMapper(palette=palette, low=df[column].min(),
+                                 high=df[column].max(), nan_color='#ffffff')
+        else:
+            ccm = LinearColorMapper(palette=palette, low=df[column].min(),
+                                    high=df[column].max(), nan_color='#ffffff')
     else:
         ccm = None
 
