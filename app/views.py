@@ -1,6 +1,8 @@
 from collections import OrderedDict
 
+import os
 import numpy as np
+import pandas as pd
 
 from bokeh.plotting import Figure
 from bokeh.models import HoverTool, ColumnDataSource, FixedTicker
@@ -17,8 +19,6 @@ from flask import render_template
 
 from mendeleevapp import app, __version__
 
-from datautils import get_data
-
 
 PLOT_WIDTH = 1150
 PLOT_HEIGHT = 800
@@ -32,6 +32,14 @@ HOVER_TOOLTIPS = [
     ("group", "@name_group"),
     ("series", "@name_series"),
 ]
+
+
+def get_data():
+
+    fpkl = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data',
+                        "neutral.pkl")
+
+    return pd.read_pickle(fpkl)
 
 
 def get_category_names():
