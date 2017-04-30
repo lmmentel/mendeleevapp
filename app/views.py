@@ -1,5 +1,5 @@
 from collections import OrderedDict
-
+import glob
 import os
 import numpy as np
 import pandas as pd
@@ -34,12 +34,22 @@ HOVER_TOOLTIPS = [
 ]
 
 
-def get_data():
+def get_data(version=False):
+    '''
+    retrieve the data from a pickle and optionally return
+    the version of mendeleev that produced the data
+    '''
 
-    fpkl = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data',
-                        "neutral.pkl")
+    path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data',
+                        'neutral*.pkl')
 
-    return pd.read_pickle(fpkl)
+    files = glob.glob(path)
+    newest = sorted(files)[-1]
+
+    if version:
+        return os.path.basename(newest).lstrip('neutral_').rstrip('.pkl')
+    else:
+        return pd.read_pickle(newest)
 
 
 def get_category_names():
@@ -50,7 +60,9 @@ def get_category_names():
 
     out = {'None': '---', 'block': 'Block', 'group_name': 'Group',
            'period': 'Period', 'name_series': 'Series',
-           'is_radioactive': 'Radioactive', 'is_monoisotopic': 'Monoisotopic'}
+           'is_radioactive': 'Radioactive', 'is_monoisotopic': 'Monoisotopic',
+           'goldschmidt_class': 'Goldschmidt class',
+           'geochemical_class': 'Geochemical class'}
 
     return OrderedDict(sorted(out.items(), key=lambda x: x[0]))
 
@@ -59,8 +71,8 @@ def get_property_names(data):
 
     propattrs = data.columns.values
 
-    exclude = ['annotation', 'color', 'cpk_color', 'description',
-               'electronic_configuration',
+    exclude = ['annotation', 'cas', 'color', 'cpk_color', 'description',
+               'electronic_configuration', 'group_name', 'series_colors',
                'is_radioactive', 'is_monoisotopic',
                'id', 'index', 'molcas_gv_color',
                'jmol_color', 'lattice_structure', 'name', 'symbol',
@@ -98,11 +110,21 @@ def get_color_mapper(column, df, palette='Viridis256'):
         'group_name': viridis(18),
         'is_radioactive': d3['Category10'][4][2:],
         'is_monoisotopic': d3['Category10'][4][2:],
+        'goldschmidt_class': 'Set2_4',
+        'geochemical_class': d3['Category10'][10],
     }
 
     if column in cmaps.keys():
         factors = list(df[column].unique())
-        ccm = CategoricalColorMapper(palette=cmaps[column], factors=factors)
+        if any(x is None for x in factors):
+            factors = sorted([x for x in factors if x is not None]) + [None]
+        elif column == 'group_name':
+            factors = [str(x) for x in sorted(int(s) for s in factors
+                       if s != 'f block')] + ['f block']
+        else:
+            factors = sorted(factors)
+        ccm = CategoricalColorMapper(palette=cmaps[column], factors=factors,
+                                     nan_color='#ffffff')
     elif column == 'value':
 
         if df[column].skew() > SKEW_THRS:
@@ -401,6 +423,8 @@ def data():
 @app.route('/info/')
 def info():
 
-    html = render_template('info.html', version=__version__)
+    dataversion = get_data(version=True)
+    html = render_template('info.html', version=__version__,
+                           dataversion=dataversion)
 
     return encode_utf8(html)
