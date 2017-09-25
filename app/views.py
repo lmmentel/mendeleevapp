@@ -177,7 +177,7 @@ def periodic_plot(cds, title='Periodic Table', width=PLOT_WIDTH,
                  y_range=(10.0, 0.5),
                  plot_width=width,
                  plot_height=height,
-                 tools='box_zoom,pan,resize,save,reset',
+                 tools='box_zoom,pan,save,reset',
                  toolbar_location='above',
                  toolbar_sticky=False,
                  )
@@ -336,7 +336,7 @@ def correlation():
     fig = Figure(title='{} vs {}'.format(properties[xattr], properties[yattr]),
                  plot_width=PLOT_WIDTH,
                  plot_height=PLOT_HEIGHT,
-                 tools='box_zoom,pan,resize,save,reset',
+                 tools='box_zoom,pan,save,reset',
                  toolbar_location='above',
                  toolbar_sticky=False,
                  )
