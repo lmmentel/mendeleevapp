@@ -9,7 +9,6 @@ from bokeh.models import HoverTool, ColumnDataSource, FixedTicker
 from bokeh.models.widgets import DataTable, TableColumn
 from bokeh.embed import components
 from bokeh.resources import INLINE
-from bokeh.util.string import encode_utf8
 from bokeh.palettes import d3, viridis
 from bokeh.models.mappers import (CategoricalColorMapper, LinearColorMapper,
                                   LogColorMapper)
@@ -86,7 +85,8 @@ def get_property_names(data):
 
     for k, v in properties.items():
         if k.startswith('en_'):
-            properties[k] = 'Electronegativity {}'.format(k.replace('en_', '').title().replace('-', ' and '))
+            properties[k] = f"Electronegativity {k.replace('en_', '').title().replace('-', ' and ')}"
+
 
     return OrderedDict(sorted(properties.items(), key=lambda x: x[0]))
 
@@ -114,7 +114,7 @@ def get_color_mapper(column, df, palette='Viridis256'):
         'geochemical_class': d3['Category10'][10],
     }
 
-    if column in cmaps.keys():
+    if column in cmaps:
         factors = list(df[column].unique())
         if any(x is None for x in factors):
             factors = sorted([x for x in factors if x is not None]) + [None]
@@ -123,20 +123,14 @@ def get_color_mapper(column, df, palette='Viridis256'):
                        if s != 'f block')] + ['f block']
         else:
             factors = sorted(factors)
-        ccm = CategoricalColorMapper(palette=cmaps[column], factors=factors,
-                                     nan_color='#ffffff')
+        return CategoricalColorMapper(palette=cmaps[column], factors=factors, nan_color='#ffffff')
+
     elif column == 'value':
 
-        if df[column].skew() > SKEW_THRS:
-            ccm = LogColorMapper(palette=palette, low=df[column].min(),
-                                 high=df[column].max(), nan_color='#ffffff')
-        else:
-            ccm = LinearColorMapper(palette=palette, low=df[column].min(),
-                                    high=df[column].max(), nan_color='#ffffff')
-    else:
-        ccm = None
+        return LogColorMapper(palette=palette, low=df[column].min(), high=df[column].max(), nan_color='#ffffff') if df[column].skew() > SKEW_THRS else LinearColorMapper(palette=palette, low=df[column].min(), high=df[column].max(), nan_color='#ffffff')
 
-    return ccm
+    else:
+        return None
 
 
 def periodic_plot(cds, title='Periodic Table', width=PLOT_WIDTH,
@@ -256,14 +250,8 @@ def make_table(cds, properties):
             names as values
     '''
 
-    table_columns = []
-    for attr, name in properties.items():
-        table_columns.append(TableColumn(field=attr, title=name))
-
-    table = DataTable(source=cds, columns=table_columns,
-                      width=PLOT_WIDTH, height=PLOT_HEIGHT)
-
-    return table
+    table_columns = [TableColumn(field=attr, title=name) for attr, name in properties.items()]
+    return DataTable(source=cds, columns=table_columns, width=PLOT_WIDTH, height=PLOT_HEIGHT)
 
 
 @app.route('/')
@@ -302,21 +290,7 @@ def index():
 
     script, div = components(fig)
 
-    html = render_template(
-        'index.html',
-        plot_script=script,
-        plot_div=div,
-        properties=properties,
-        categories=categories,
-        palettes=palettes,
-        propselected=sel_col,
-        catselected=colorby,
-        palselected=palette,
-        js_resources=js_resources,
-        css_resources=css_resources,
-    )
-
-    return encode_utf8(html)
+    return render_template('index.html', plot_script=script, plot_div=div, properties=properties, categories=categories, palettes=palettes, propselected=sel_col, catselected=colorby, palselected=palette, js_resources=js_resources, css_resources=css_resources,)
 
 
 @app.route('/correlations/')
@@ -333,13 +307,7 @@ def correlation():
     properties = get_property_names(data)
     categories = get_category_names()
 
-    fig = Figure(title='{} vs {}'.format(properties[xattr], properties[yattr]),
-                 plot_width=PLOT_WIDTH,
-                 plot_height=PLOT_HEIGHT,
-                 tools='box_zoom,pan,save,reset',
-                 toolbar_location='above',
-                 toolbar_sticky=False,
-                 )
+    fig = Figure(title=f'{properties[xattr]} vs {properties[yattr]}', plot_width=PLOT_WIDTH, plot_height=PLOT_HEIGHT, tools='box_zoom,pan,save,reset', toolbar_location='above', toolbar_sticky=False)
 
     fig.xaxis.axis_label = properties[xattr]
     fig.yaxis.axis_label = properties[yattr]
@@ -373,20 +341,7 @@ def correlation():
     js_resources = INLINE.render_js()
     css_resources = INLINE.render_css()
 
-    html = render_template(
-        'correlations.html',
-        plot_script=script,
-        plot_div=div,
-        properties=properties,
-        categories=categories,
-        xselected=xattr,
-        yselected=yattr,
-        catselected=categ,
-        js_resources=js_resources,
-        css_resources=css_resources,
-    )
-
-    return encode_utf8(html)
+    return render_template('correlations.html', plot_script=script, plot_div=div, properties=properties, categories=categories, xselected=xattr, yselected=yattr, catselected=categ, js_resources=js_resources, css_resources=css_resources,)
 
 
 @app.route('/data/')
@@ -409,22 +364,11 @@ def data():
     js_resources = INLINE.render_js()
     css_resources = INLINE.render_css()
 
-    html = render_template(
-        'data.html',
-        plot_script=script,
-        plot_div=div,
-        js_resources=js_resources,
-        css_resources=css_resources,
-    )
-
-    return encode_utf8(html)
+    return render_template('data.html', plot_script=script, plot_div=div, js_resources=js_resources, css_resources=css_resources,)
 
 
 @app.route('/info/')
 def info():
 
     dataversion = get_data(version=True)
-    html = render_template('info.html', version=__version__,
-                           dataversion=dataversion)
-
-    return encode_utf8(html)
+    return render_template('info.html', version=__version__, dataversion=dataversion)
